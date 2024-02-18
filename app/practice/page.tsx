@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import data from "./data.json";
+import { on } from "events";
 
 type Question = {
   STT: string;
@@ -13,6 +14,7 @@ type Question = {
   "Tham chiếu": string;
   "Mảng nghiệp vụ": string;
   answer: boolean[];
+  _submitted: boolean;
 };
 
 const Practice = () => {
@@ -21,25 +23,25 @@ const Practice = () => {
 
   const [currentQuestIdx, setQuestionIdx] = useState(0);
 
-  const result = questions.reduce((acc, q, idx) => {
-    const theCorrectAnswerArray = q["ĐÁP ÁN ĐÚNG"]
-      .toString()
-      .replaceAll(" ", "")
-      .split(",")
-      .map((i) => parseInt(i));
-    const correctBoolean = [false, false, false, false].map((i, idx) =>
-      theCorrectAnswerArray.includes(idx + 1)
-    );
-    console.log(correctBoolean, q["ĐÁP ÁN ĐÚNG"]);
-    // console.log(correctBoolean, q.answer);
+  const getResults = useCallback(() => {
+    return questions.reduce((acc, q, idx) => {
+      const theCorrectAnswerArray = q["ĐÁP ÁN ĐÚNG"]
+        .toString()
+        .replaceAll(" ", "")
+        .split(",")
+        .map((i) => parseInt(i));
+      const correctBoolean = [false, false, false, false].map((i, idx) =>
+        theCorrectAnswerArray.includes(idx + 1)
+      );
+      console.log(correctBoolean, q["ĐÁP ÁN ĐÚNG"]);
+      // console.log(correctBoolean, q.answer);
 
-    if (correctBoolean.every((i, idx) => i === q.answer[idx])) {
-      return acc + 1;
-    }
-    return acc;
-  }, 0);
-
-  console.log("result", result);
+      if (correctBoolean.every((i, idx) => i === q.answer[idx])) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+  }, [questions]);
 
   useEffect(() => {
     const _q = loadQuestion();
@@ -72,29 +74,15 @@ const Practice = () => {
                 });
                 setQuestions(newQuestions);
               }}
+              onNext={() => setQuestionIdx(currentQuestIdx + 1)}
+              onPrev={() => setQuestionIdx(currentQuestIdx - 1)}
               question={questions[currentQuestIdx]}
             />
-            <div className="flex justify-end">
-              {currentQuestIdx > 0 && (
-                <button
-                  className={`${secondaryBtnClassName}`}
-                  onClick={() => setQuestionIdx(currentQuestIdx - 1)}
-                >
-                  Câu Trước
-                </button>
-              )}
-              <button
-                className={`${secondaryBtnClassName}`}
-                onClick={() => setQuestionIdx(currentQuestIdx + 1)}
-              >
-                Câu tiếp theo
-              </button>
-            </div>
           </div>
         ) : (
           <div>
             <p>Finish</p>
-            <p>Kết quả: {`${result}/${questions.length}`}</p>
+            <p>Kết quả: {`${getResults()}/${questions.length}`}</p>
           </div>
         )}
       </div>
@@ -108,11 +96,16 @@ const secondaryBtnClassName =
 const Question = ({
   question,
   onChange,
+  onNext,
+  onPrev,
 }: {
   question: Question;
   onChange: (_q: Question) => void;
+  onNext: () => void;
+  onPrev: () => void;
 }) => {
   const [showAnswer, setShowAnswer] = useState(false);
+
 
   const handleAnswerChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -124,9 +117,17 @@ const Question = ({
     });
   };
 
+  const checkAnswer = () => {
+    onChange({ ...question, _submitted: true });
+  };
+
+  const goNextQuestion = () => {
+    onNext();
+  };
+
   useEffect(() => {
     setShowAnswer(false);
-  }, [question.STT])
+  }, [question.STT]);
 
   return (
     <div>
@@ -145,11 +146,12 @@ const Question = ({
                 type="checkbox"
                 id={`option${idx}`}
                 name={`option${idx}`}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                className="h-4 min-w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                 checked={question.answer[idx]}
+                disabled={question._submitted}
               />
               <label
-                className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                className={`ms-2 text-sm font-medium ${getQuestionLabelColor(question._submitted, question["ĐÁP ÁN ĐÚNG"], idx)}`}
                 htmlFor={`option${idx}`}
               >
                 {i}
@@ -158,15 +160,50 @@ const Question = ({
           );
         })}
       </div>
-      <div>
-        <button onClick={() => setShowAnswer(s => !s)} className={secondaryBtnClassName}>
+      {/* <div>
+        <button
+          onClick={() => setShowAnswer((s) => !s)}
+          className={secondaryBtnClassName}
+        >
           Hien ket qua
         </button>
         {showAnswer && <span>{question["ĐÁP ÁN ĐÚNG"]}</span>}
+      </div> */}
+      <div>
+        <div className="flex justify-end">
+          <button className={`${secondaryBtnClassName}`} onClick={onPrev}>
+            Câu Trước
+          </button>
+          {question._submitted ? (
+            <button
+              className={`${secondaryBtnClassName}`}
+              onClick={goNextQuestion}
+            >
+              Câu tiếp theo
+            </button>
+          ) : (
+            <button
+              className={`${secondaryBtnClassName}`}
+              onClick={checkAnswer}
+            >
+              Câu tiếp theo
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
+const getQuestionLabelColor = (submitted: boolean, answer: string | number, optionIdx: number ) => {
+  if (!submitted) {
+    return "text-black";
+  }
+
+  if (answer.toString().includes((optionIdx + 1).toString())) {
+    return "text-green-600";
+  }
+}
 
 const fillAnswer = (checked: boolean, idx: number, question: Question) => {
   return question.answer.map((i, _idx) => {
@@ -184,7 +221,11 @@ const loadQuestion = (): Question[] => {
   // Get sub-array of first 100 elements after shuffled
   let selected = shuffled.slice(0, 100);
 
-  return selected.map((i) => ({ ...i, answer: [false, false, false, false] }));
+  return selected.map((i) => ({
+    ...i,
+    answer: [false, false, false, false],
+    _submitted: false,
+  }));
 };
 
 export default Practice;
