@@ -37,8 +37,12 @@ const Practice = () => {
 
   return (
     <div className="p-20 text-black">
+      <button onClick={() => {
+        setQuestions(loadQuestion());
+        setQuestionIdx(0);
+      }} className={`${secondaryBtnClassName}`}>Thi Lai</button>
       <div>
-        {currentQuestIdx < questions.length ? (
+        {currentQuestIdx < questions.length && currentQuestIdx > -1 ? (
           <>
             <h1>Question number: {currentQuestIdx + 1}</h1>
             <Question onChange={q => {
@@ -50,7 +54,12 @@ const Practice = () => {
                 })
                 setQuestions(newQuestions);
             }} question={questions[currentQuestIdx]} />
-            <button className="mt-6 text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:focus:ring-blue-800" onClick={() => setQuestionIdx(currentQuestIdx + 1)}>
+            {
+              currentQuestIdx > 0 && <button className={`${secondaryBtnClassName}`} onClick={() => setQuestionIdx(currentQuestIdx - 1)}>
+              Câu Trước
+            </button> 
+            }
+            <button className={`${secondaryBtnClassName}`} onClick={() => setQuestionIdx(currentQuestIdx + 1)}>
               Câu tiếp theo
             </button>
           </>
@@ -64,6 +73,8 @@ const Practice = () => {
     </div>
   );
 };
+
+const secondaryBtnClassName = "mt-6 text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:focus:ring-blue-800"
 
 const Question = ({
   question,
