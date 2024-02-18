@@ -94,7 +94,7 @@ const Question = ({
           checked={question.answer[0]}
         //   value={question.answer[0] ? "true" : "false"}
         />
-        <label htmlFor="option1">{question["Câu trả lời 1"]}</label>
+        <label className="text-black" htmlFor="option1">{question["Câu trả lời 1"]}</label>
       </div>
       <div>
         <input
