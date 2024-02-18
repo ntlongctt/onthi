@@ -36,7 +36,7 @@ const Practice = () => {
   console.log('result', result);
 
   return (
-    <div className="p-20">
+    <div className="p-20 text-black">
       <div>
         {currentQuestIdx < questions.length ? (
           <>
