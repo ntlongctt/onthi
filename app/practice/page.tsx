@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import data from "./data.json";
 
 type Question = {
@@ -112,98 +112,69 @@ const Question = ({
   question: Question;
   onChange: (_q: Question) => void;
 }) => {
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  const handleAnswerChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    idx: number
+  ) => {
+    onChange({
+      ...question,
+      answer: fillAnswer(e.target.checked, idx, question),
+    });
+  };
+
+  useEffect(() => {
+    setShowAnswer(false);
+  }, [question.STT])
+
   return (
     <div>
       <p className="mb-6">{question["Nội dung câu hỏi"]}</p>
       <div className="flex flex-col gap-4">
-        <div className="flex gap-2">
-          <input
-            onChange={(e) =>
-              onChange({
-                ...question,
-                answer: [
-                  e.target.checked,
-                  question.answer[0],
-                  question.answer[2],
-                  question.answer[3],
-                ],
-              })
-            }
-            type="checkbox"
-            id="option1"
-            name="option1"
-            checked={question.answer[0]}
-          />
-          <label className="text-black" htmlFor="option1">
-            {question["Câu trả lời 1"]}
-          </label>
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="checkbox"
-            id="option2"
-            name="option2"
-            //   value={question.answer[1] ? "true" : "false"}
-            checked={question.answer[1]}
-            onChange={(e) =>
-              onChange({
-                ...question,
-                answer: [
-                  question.answer[0],
-                  e.target.checked,
-                  question.answer[2],
-                  question.answer[3],
-                ],
-              })
-            }
-          />
-          <label htmlFor="option2">{question["Câu trả lời 2"]}</label>
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="checkbox"
-            id="option3"
-            name="option3"
-            //   value={question.answer[2] ? "true" : "false"}
-            checked={question.answer[2]}
-            onChange={(e) =>
-              onChange({
-                ...question,
-                answer: [
-                  question.answer[0],
-                  question.answer[1],
-                  e.target.checked,
-                  question.answer[3],
-                ],
-              })
-            }
-          />
-          <label htmlFor="option3">{question["Câu trả lời 3"]}</label>
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="checkbox"
-            id="option4"
-            name="option4"
-            //   value={question.answer[3] ? "true" : "false"}
-            checked={question.answer[3]}
-            onChange={(e) =>
-              onChange({
-                ...question,
-                answer: [
-                  question.answer[0],
-                  question.answer[1],
-                  question.answer[2],
-                  e.target.checked,
-                ],
-              })
-            }
-          />
-          <label htmlFor="option4">{question["Câu trả lời 4"]}</label>
-        </div>
+        {[
+          question["Câu trả lời 1"],
+          question["Câu trả lời 2"],
+          question["Câu trả lời 3"],
+          question["Câu trả lời 4"],
+        ].map((i, idx) => {
+          return (
+            <div key={idx} className="flex items-center mb-4">
+              <input
+                onChange={(e) => handleAnswerChange(e, idx)}
+                type="checkbox"
+                id={`option${idx}`}
+                name={`option${idx}`}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                checked={question.answer[idx]}
+              />
+              <label
+                className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                htmlFor={`option${idx}`}
+              >
+                {i}
+              </label>
+            </div>
+          );
+        })}
+      </div>
+      <div>
+        <button onClick={() => setShowAnswer(s => !s)} className={secondaryBtnClassName}>
+          Hien ket qua
+        </button>
+        {showAnswer && <span>{question["ĐÁP ÁN ĐÚNG"]}</span>}
       </div>
     </div>
   );
+};
+
+const fillAnswer = (checked: boolean, idx: number, question: Question) => {
+  return question.answer.map((i, _idx) => {
+    if (idx === _idx) {
+      return checked;
+    }
+    return i;
+  });
 };
 
 const loadQuestion = (): Question[] => {
