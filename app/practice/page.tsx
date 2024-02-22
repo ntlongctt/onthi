@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useReducer, useState } from "react";
-import data from "./data.json";
+import data from "./data2.json";
 import { on } from "events";
 
 type Question = {
@@ -15,7 +15,8 @@ type Question = {
   "Mảng nghiệp vụ": string;
   answer: boolean[];
   _submitted: boolean;
-};
+} & Record<string, any>;
+
 
 const Practice = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -146,9 +147,10 @@ const Question = ({
                 type="checkbox"
                 id={`option${idx}`}
                 name={`option${idx}`}
-                className="h-4 min-w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                className="h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                 checked={question.answer[idx]}
                 disabled={question._submitted}
+                style={{minWidth: "1rem"}}
               />
               <label
                 className={`ms-2 text-sm font-medium ${getQuestionLabelColor(question._submitted, question["ĐÁP ÁN ĐÚNG"], idx)}`}
@@ -214,7 +216,7 @@ const fillAnswer = (checked: boolean, idx: number, question: Question) => {
   });
 };
 
-const loadQuestion = (): Question[] => {
+const loadQuestion = (): any[] => {
   // Shuffle array
   const shuffled = data.sort(() => 0.5 - Math.random());
 
